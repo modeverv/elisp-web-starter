@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: 0BSD  (yours to change; no conditions)
+# Written by server/cgi/deploy.sh next to index.html.  Requests to /api/...
+# go to app.cgi, which starts an Emacs that answers with server.el; the
+# host's web server sends the other files.
+RewriteEngine On
+RewriteRule ^api/(.*)$ app.cgi/api/$1 [L,QSA]
+CGIPassAuth On
+
+# The page's Lisp is UTF-8 text.
+AddType text/plain .el
+AddCharset utf-8 .el .html .css
+
+# For the files, what serve-project.el says with every answer (app.cgi's
+# answers say it themselves: not again for those).
+<FilesMatch "\.(html|el|css|js|mjs|json|svg|png|jpg|gif|ico|wasm|txt)$">
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set Content-Security-Policy "frame-ancestors 'self'; form-action 'self'; base-uri 'self'; object-src 'none'"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+</FilesMatch>
+<FilesMatch "\.(html|el|css)$">
+  Header set Cache-Control "no-cache"
+</FilesMatch>

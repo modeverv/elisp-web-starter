@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Write the routes of a project from its pages/ with Emacs
+# (lisp/nextel-build.el), outside an Emacs you edit with: for npm, CI and
+# other editors.  Run the copy that is in the project (vendor/elisp-next/):
+# the page loads the framework from there.
+#
+#   vendor/elisp-next/bin/nextel-routes [DIRECTORY]           write routes.el and index.html's scripts
+#   vendor/elisp-next/bin/nextel-routes --check [DIRECTORY]   exit 1 when they are not up to date
+#   vendor/elisp-next/bin/nextel-routes --watch [DIRECTORY]   write them whenever pages/, api/ or shared/ change
+#
+# DIRECTORY is the project (the current directory by default).  In Emacs
+# (also elisp-studio's): M-x load-file RET vendor/elisp-next/lisp/nextel-build.el,
+# then M-x nextel-write-routes, or M-x nextel-routes-mode to write them at
+# every save.
+set -euo pipefail
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+command=nextel-write-routes
+case "${1:-}" in
+  --check) command=nextel-check-routes; shift ;;
+  --watch) command=nextel-watch-routes; shift ;;
+  -*) echo "usage: nextel-routes [--check | --watch] [DIRECTORY]" >&2; exit 2 ;;
+esac
+cd "${1:-.}"
+
+emacs_bin="${EMACS:-}"
+if [ -z "${emacs_bin}" ]; then
+  # An "emacs" on PATH that is a link into a macOS app bundle does not
+  # start: take the first candidate that really runs.
+  for candidate in "$(command -v emacs || true)" \
+                   /Applications/Emacs.app/Contents/MacOS/Emacs \
+                   /Applications/Emacs-takaxp/Emacs.app/Contents/MacOS/Emacs; do
+    if [ -n "${candidate}" ] && [ -x "${candidate}" ] \
+       && "${candidate}" --batch -Q --eval t >/dev/null 2>&1; then
+      emacs_bin="${candidate}"
+      break
+    fi
+  done
+fi
+[ -n "${emacs_bin}" ] || { echo "nextel-routes: no Emacs found; set EMACS=/path/to/emacs" >&2; exit 127; }
+exec "${emacs_bin}" --batch -Q -l "${here}/lisp/nextel-build.el" -f "${command}"

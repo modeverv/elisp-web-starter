@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Notes</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <div id="app"><p class="booting">Loading Emacs…</p></div>
+    <!-- The Lisp of the page, in this order.  elisp-next writes the two regions
+         (vendor/elisp-next/bin/nextel-routes); your own scripts go between them. -->
+    <!-- nextel:framework -->
+    <script type="text/emacs-lisp" src="vendor/elisp-next/lisp/nextel-schema.el"></script>
+    <script type="text/emacs-lisp" src="vendor/elisp-next/lisp/nextel-route.el"></script>
+    <script type="text/emacs-lisp" src="vendor/elisp-next/lisp/nextel.el"></script>
+    <script type="text/emacs-lisp" src="shared/starter-types.el"></script>
+    <!-- /nextel:framework -->
+    <!-- nextel:pages -->
+    <script type="text/emacs-lisp" src="pages/_layout.el"></script>
+    <script type="text/emacs-lisp" src="pages/_parts/format.el"></script>
+    <script type="text/emacs-lisp" src="pages/_parts/note-form.el"></script>
+    <script type="text/emacs-lisp" src="pages/404.el"></script>
+    <script type="text/emacs-lisp" src="pages/about.el"></script>
+    <script type="text/emacs-lisp" src="pages/index.el"></script>
+    <script type="text/emacs-lisp" src="pages/notes/[id].el"></script>
+    <script type="text/emacs-lisp" src="routes.el"></script>
+    <!-- /nextel:pages -->
+    <!-- elisp-react of VERSIONS: it starts the page's Emacs and loads the Lisp above. -->
+    <script type="module" src="vendor/elisp-react/js/elisp-react.js"></script>
+  </body>
+</html>

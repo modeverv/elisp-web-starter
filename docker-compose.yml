@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: 0BSD  (yours to change; no conditions)
+# This application with Docker: GNU Emacs is the web server and Caddy is in
+# front of it, in one container (Dockerfile).
+#
+#   docker compose up -d --build        then open http://localhost:8080/
+#   docker compose logs -f              one line per request
+#   docker compose down                 stop it (the volumes stay)
+#
+# Under a domain whose DNS points at this machine, over HTTPS (Caddy gets
+# the certificate from Let's Encrypt; ports 80 and 443 must be free):
+#
+#   DOMAIN=example.com HTTP_PORT=80 HTTPS_PORT=443 docker compose up -d --build
+#
+# or put those three lines in a file .env next to this one.  What the server
+# keeps (.data/: the database, sessions, password hashes, uploads) and
+# Caddy's certificates are in volumes: they outlive the container and the
+# next build.  Back them up (backup.sh in the container, or the volume).
+services:
+  app:
+    build: .
+    init: true
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+      - "${HTTPS_PORT:-8443}:443"
+    environment:
+      DOMAIN: ${DOMAIN:-}
+      HTTP_PORT: ${HTTP_PORT:-8080}
+      HTTPS_PORT: ${HTTPS_PORT:-8443}
+      # The address visitors use, if it is not https://DOMAIN (without a
+      # domain: http://localhost:HTTP_PORT).  A request to /api/ from a page
+      # of another address is refused.
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-}
+      # Pages of other sites that may use /api/ (README.txt).
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
+    volumes:
+      - data:/srv/app/.data
+      - caddy:/data
+
+volumes:
+  data:
+  caddy:

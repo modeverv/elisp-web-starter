@@ -1,0 +1,52 @@
+# test/run.sh and the browser test at every push, and on Mondays: the page
+# of a fresh clone takes the newest browser Emacs from its site, so the
+# weekly run tells whether that still runs this application.
+name: Test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  lisp:
+    name: Lisp (routes, lint, tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Emacs
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y emacs-nox
+      - run: test/run.sh
+      - name: The vendored files are those of VERSIONS
+        run: tools/vendor.sh --check
+
+  browser:
+    name: Browser (${{ matrix.emacs }} Emacs in the page)
+    needs: lisp
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # pinned: WASMACS of VERSIONS, served by run.sh (./fetch-emacs.sh);
+        # newest: from https://modeverv.github.io/wasmacs/, as a fresh clone has it.
+        emacs: [pinned, newest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Emacs
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y emacs-nox
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: The browser's Emacs of VERSIONS
+        if: matrix.emacs == 'pinned'
+        run: ./fetch-emacs.sh --core
+      - run: npm run test:e2e

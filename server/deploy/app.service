@@ -1,0 +1,38 @@
+# systemd: keep the application running.  Adjust the paths, the user and the
+# origin, copy to /etc/systemd/system/app.service, then:
+#
+#   systemctl daemon-reload && systemctl enable --now app
+#   journalctl -u app -f        one line per request
+
+[Unit]
+Description=A web application whose server is GNU Emacs
+After=network.target
+
+[Service]
+User=app
+WorkingDirectory=/srv/app
+Environment=PUBLIC_ORIGIN=https://example.com
+# Pages of other sites that may use /api/ (a front end elsewhere): their
+# requests come without cookies unless CORS_CREDENTIALS=yes.
+#Environment=CORS_ORIGINS=https://front.example.net
+# Four Emacs processes, on 8018 to 8021 (the proxy's list of upstreams
+# matches): one Emacs uses one core and does one thing at a time.  They
+# share .data/; what server.el keeps in a Lisp variable is known to one of
+# them only.  WORKERS=1 for an application that needs that.
+Environment=WORKERS=4
+# The proxy sends the larger files (Caddyfile and nginx.conf here are
+# written for it); Emacs only says which.  Not with another proxy.
+Environment=PROXY_SENDS_FILES=yes
+ExecStart=/srv/app/run.sh 8018
+Restart=always
+RestartSec=1
+
+# The server needs to write its data, and nothing else.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/srv/app/.data
+
+[Install]
+WantedBy=multi-user.target

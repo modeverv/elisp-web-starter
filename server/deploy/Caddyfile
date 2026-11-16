@@ -1,0 +1,67 @@
+# Caddy in front of this application.  Caddy does HTTPS (it gets the
+# certificate itself) and compression; Emacs, on the same machine, does the
+# rest.  (The browser's Emacs in vendor/ arrives compressed from Emacs:
+# fetch-emacs.sh keeps .gz copies, which Caddy passes on as they are.)
+# Replace example.com (or set SITE_ADDRESS: the container does, docker-start.sh), then:
+#
+#   PUBLIC_ORIGIN=https://example.com WORKERS=4 PROXY_SENDS_FILES=yes ./run.sh
+#   caddy run --config server/deploy/Caddyfile
+#
+# Caddy tells the application who the visitor is (X-Forwarded-For,
+# X-Forwarded-Proto) and does not pass on what a visitor claims in those
+# headers.
+
+{$SITE_ADDRESS:example.com} {
+	encode zstd gzip
+	# Browsers that were here once come back over HTTPS only.
+	header Strict-Transport-Security "max-age=31536000"
+	header X-Content-Type-Options nosniff
+
+	# The browser's Emacs, if ./fetch-emacs.sh put it into vendor/: Caddy
+	# sends those files itself (the path is the application's directory).
+	# They are what every new visitor downloads, 5 MB each, and Emacs
+	# sends one file at a time: twenty to thirty visitors arriving in the
+	# same second are what it manages, and Caddy has no such limit.  It sends
+	# the .gz copies and the parts of a file that the page asks for.
+	handle /vendor/* {
+		root * /srv/app
+		file_server {
+			precompressed gzip
+		}
+	}
+	handle {
+		# Four Emacs processes (WORKERS=4 ./run.sh, on 8018 to 8021): one
+		# Emacs uses one core and does one thing at a time.  With WORKERS=1,
+		# leave the first address only.
+		reverse_proxy 127.0.0.1:8018 127.0.0.1:8019 127.0.0.1:8020 127.0.0.1:8021 {
+			lb_policy least_conn
+
+			# With PROXY_SENDS_FILES=yes, Emacs decides whether a file may be
+			# sent and to whom, and names it in this header; Caddy sends it:
+			# any other file of the application, and the files its server.el
+			# answers with.  Visitors on slow connections, or who do not read,
+			# then wait at Caddy and not inside Emacs.  (The path is the
+			# application's directory again.  Nothing reaches these lines
+			# except through an answer of Emacs.)
+			@sent-by-caddy header X-Accel-Redirect *
+			handle_response @sent-by-caddy {
+				root * /srv/app
+				rewrite * {rp.header.X-Accel-Redirect}
+				uri strip_prefix /.files
+				copy_response_headers {
+					include Content-Type Content-Disposition Cache-Control Set-Cookie Cross-Origin-Resource-Policy
+				}
+				file_server {
+					precompressed gzip
+				}
+			}
+		}
+	}
+}
+
+# Uploads need nothing here: Caddy passes a body of any size on as it
+# arrives, and server.el says what the application takes.
+#
+# Caddy has nothing built in that limits how many connections one address
+# may hold (nginx.conf here has such a limit).  Where that matters, it is
+# the firewall's work, or that of a Caddy built with a rate limiting module.

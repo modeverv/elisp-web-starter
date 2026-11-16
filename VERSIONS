@@ -1,0 +1,16 @@
+# The versions this starter was made and tested with: one line each,
+# NAME=VERSION, read by tools/vendor.sh, fetch-emacs.sh and GET /api/health.
+# Each is a repository of https://github.com/modeverv/ at a tag or commit.
+#
+# After changing one: tools/vendor.sh, then test/run.sh and npm run test:e2e.
+
+# The pages, the API routes, the shared types: vendor/elisp-next/.  The Lisp
+# of v0.1.2; this commit after the tag adds doc/api.ja.md (the API in Japanese).
+ELISP_NEXT=95f3d4b240d66065c51b0b0cac46dbe3a35fc35c
+# React in Emacs Lisp, the page's host script and the test helpers: vendor/elisp-react/
+ELISP_REACT=3bbe8421a532a10b3ea375569073bf16a31fdd56
+# The server (serve-project.el, app-server.el, serve-cgi.el) and the deployment kit: server/, run.sh
+ELISP_STUDIO=27789103f31167232589297e6f62c9ae99d532ee
+# GNU Emacs 30.2 as WebAssembly, which runs the page: from its site, or vendor/wasmacs/ (fetch-emacs.sh)
+WASMACS=814bcfdc5e762039cdbb9820a4614db9ed2fd61e
+WASMACS_BUILD=19ee2aa817b34ca15913c158d4fc15ee

@@ -1,0 +1,11 @@
+# What the image leaves out (docker build): the repository, the server's
+# data (a volume keeps it: docker-compose.yml), what the tools cache, and
+# compiled files.  vendor/ goes in: the browser's Emacs, if fetch-emacs.sh
+# put it there, is served from it.
+.git
+.github
+.data
+.cache
+.elisp-studio.json
+.env
+*.elc

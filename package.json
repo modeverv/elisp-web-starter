@@ -1,0 +1,21 @@
+{
+  "name": "elisp-web-starter",
+  "private": true,
+  "license": "0BSD",
+  "type": "module",
+  "description": "A web application written in Emacs Lisp on both sides, with elisp-next: pages, API routes, shared types, tests, pinned versions",
+  "scripts": {
+    "start": "./run.sh",
+    "test": "test/run.sh",
+    "test:e2e": "node test/e2e.mjs",
+    "routes": "vendor/elisp-next/bin/nextel-routes",
+    "routes:check": "vendor/elisp-next/bin/nextel-routes --check",
+    "routes:watch": "vendor/elisp-next/bin/nextel-routes --watch",
+    "vendor": "tools/vendor.sh",
+    "vendor:check": "tools/vendor.sh --check",
+    "fetch-emacs": "./fetch-emacs.sh"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

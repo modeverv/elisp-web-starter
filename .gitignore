@@ -1,0 +1,13 @@
+# What the tools write into the project, which is not for the repository:
+# the server's data (the notes database, under ./run.sh), the pinned browser
+# Emacs (./fetch-emacs.sh), compiled files, elisp-studio's local address.
+.data/
+/vendor/wasmacs/
+/vendor/.wasmacs.part/
+*.elc
+.elisp-studio.json
+node_modules/
+.DS_Store
+*~
+\#*\#
+.\#*
